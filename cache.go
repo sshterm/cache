@@ -24,7 +24,8 @@ func (c *cache) Get(key []byte) (data []byte, err error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	var buf []byte
-	buf, err = c.getFile(key).Read()
+	file := c.getFile(key)
+	buf, err = file.Read()
 	if err == nil {
 		var item Data
 		item, err = c.decode(buf)
@@ -33,6 +34,7 @@ func (c *cache) Get(key []byte) (data []byte, err error) {
 				data = item.Data
 			} else {
 				err = errors.New("item not in cache")
+				defer file.Remove()
 			}
 		}
 	}
@@ -80,8 +82,8 @@ func (c *cache) encode(item Data) (data []byte, err error) {
 	var t, t2 [8]byte
 	i := big.NewInt(int64(item.Expiration)).Bytes()
 	i2 := big.NewInt(item.Unix).Bytes()
-	copy(t[:], i)
-	copy(t2[:], i2)
+	copy(t[8-len(i):], i)
+	copy(t2[8-len(i2):], i2)
 	data = append(data, t[:]...)
 	data = append(data, t2[:]...)
 	data = append(data, item.Data...)
