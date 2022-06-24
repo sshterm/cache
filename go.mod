@@ -1,3 +1,3 @@
-module github.com/mostvel/cache
+module github.com/sshterm/cache
 
 go 1.17
